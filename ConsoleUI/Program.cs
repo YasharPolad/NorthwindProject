@@ -13,8 +13,9 @@ namespace ConsoleUI
     {
         static void Main(string[] args)
         {
-            ProductTest();
+            //ProductTest();
             //CategoryTest();
+            AddTest();
 
         }
 
@@ -33,6 +34,12 @@ namespace ConsoleUI
             ProductManager productManager = new ProductManager(new EFProductDal());
             List<ProductDetailDto> products = productManager.GetProductDetails();
             products.ForEach(p => Console.WriteLine(p.CategoryName + " " + p.ProductName));
+        }
+
+        private static void AddTest()
+        {
+            ProductManager productManager = new ProductManager(new EFProductDal());
+            productManager.Add(new Product { ProductName = "Cup", CategoryId = 1, UnitPrice = 200, UnitsInStock = 4});
         }
     }
 }
