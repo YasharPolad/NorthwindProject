@@ -1,6 +1,7 @@
 ﻿using Business.Concrete;
 using Core.DataAccess.Concrete.EntityFramework;
 using Core.Entities;
+using Core.Utilities.GenericResults;
 using DataAccess.Concrete.EntityFramework;
 using DataAccess.Concrete.InMemory;
 using Entities.Concrete;
@@ -32,8 +33,16 @@ namespace ConsoleUI
         {
             //InMemoryProductDal inMemoryProductDal = new InMemoryProductDal();
             ProductManager productManager = new ProductManager(new EFProductDal());
-            List<ProductDetailDto> products = productManager.GetProductDetails();
-            products.ForEach(p => Console.WriteLine(p.CategoryName + " " + p.ProductName));
+            IDataResult<List<ProductDetailDto>> productsResult = productManager.GetProductDetails();
+            if(productsResult.IsSuccess)
+            {
+                var products = productsResult.Data;
+                products.ForEach(p => Console.WriteLine(p.CategoryName + " " + p.ProductName));
+            }
+            else
+            {
+                Console.WriteLine(productsResult.Message);
+            }
         }
 
         private static void AddTest()
