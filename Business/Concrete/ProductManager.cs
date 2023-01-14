@@ -7,25 +7,66 @@ using Entities.Concrete;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Business.ValidationRules.FluentValidation;
+using Core.Aspects;
+using Core.CrossCuttingConcerns.Validation;
+using Core.Utilities.BusinessRules;
+using FluentValidation;
 
 namespace Business.Concrete
 {
     public class ProductManager : IProductService
     {
         private readonly IProductDal _productDal;
-        public ProductManager(IProductDal productDal)
+        private readonly ICategoryService _categoryService;
+        public ProductManager(IProductDal productDal, ICategoryService categoryService)
         {
             _productDal = productDal;
+            _categoryService = categoryService;
         }
 
+        [ValidationAspect(typeof(ProductValidator))]
         public IResult Add(Product product)
         {
-            if(product.ProductName.Length < 2)
+            var check = BusinessRules.Run(CheckProductCountInCategory(product),
+                CheckIfProductNameExists(product),
+                CheckCategoryCount());
+            if (check != null) 
             {
-                return new ErrorResult(Messages.ProductNameInvalid);
+                return check;
             }
             _productDal.Add(product);
             return new SuccessResult(Messages.ProductAdded);
+        }
+
+        private IResult CheckProductCountInCategory(Product product)
+        {
+            var result = _productDal.GetAll(p => p.CategoryId == product.CategoryId).Count;
+            if (result >= 10)
+            {
+                return new ErrorResult();
+            }
+            return new SuccessResult();
+        }
+
+        private IResult CheckIfProductNameExists(Product product)
+        {
+            var count = _productDal.GetAll(p => p.ProductName == product.ProductName).Count;
+            if (count > 0)
+            {
+                return new ErrorResult();
+            }
+            return new SuccessResult();
+        }
+
+        private IResult CheckCategoryCount()
+        {
+            var count = _categoryService.GetAll().Count;
+            if (count > 15)
+            {
+                return new ErrorResult();
+            }
+            return new SuccessResult();
         }
 
         public IDataResult<List<Product>> GetAll()
