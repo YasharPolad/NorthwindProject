@@ -7,6 +7,7 @@ using Entities.Concrete;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Business.BusinessAspects.AutoFac;
 using Business.ValidationRules.FluentValidation;
 using Core.Aspects;
 using Core.CrossCuttingConcerns.Validation;
@@ -26,6 +27,7 @@ namespace Business.Concrete
         }
 
         [ValidationAspect(typeof(ProductValidator))]
+        [SecuredOperation("product.add,admin")]
         public IResult Add(Product product)
         {
             var check = BusinessRules.Run(CheckProductCountInCategory(product),
