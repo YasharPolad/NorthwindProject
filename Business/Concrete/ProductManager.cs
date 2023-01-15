@@ -28,6 +28,7 @@ namespace Business.Concrete
 
         [ValidationAspect(typeof(ProductValidator))]
         [SecuredOperation("product.add,admin")]
+        [CacheRemoveAspect("IProductService.Get ")]
         public IResult Add(Product product)
         {
             var check = BusinessRules.Run(CheckProductCountInCategory(product),
@@ -70,7 +71,8 @@ namespace Business.Concrete
             }
             return new SuccessResult();
         }
-
+        
+        [CacheAspect()]
         public IDataResult<List<Product>> GetAll()
         { 
             if(DateTime.Now.Hour == 22)
@@ -93,10 +95,24 @@ namespace Business.Concrete
             return new SuccessDataResult<List<Product>>(products);
         }
 
+        [CacheAspect()]
+        [PerformanceAspect(10)]
         public IDataResult<Product> GetProductById(int productId)
         {
             Product product = _productDal.Get(p => p.ProductId == productId);
             return new SuccessDataResult<Product>(product);
+        }
+        
+        [TransactionScopeAspect]
+        public IResult TransactionTest(Product product)
+        {
+            Add(product);
+            if (product.UnitPrice < 10)
+            {
+                throw new Exception("fail");
+            }
+            Add(product);
+            return null;
         }
 
         public IDataResult<List<ProductDetailDto>> GetProductDetails()
